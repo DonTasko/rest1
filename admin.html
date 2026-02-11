@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin | Don Tasko</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        /* LOGIN SCREEN */
+        #login-screen { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            display: flex; justify-content: center; align-items: center; 
+            z-index: 1000; 
+        }
+        
+        .login-box { 
+            background: white; padding: 50px 40px; border-radius: 20px; 
+            box-shadow: 0 20px 80px rgba(0,0,0,0.4); min-width: 350px;
+            animation: slideIn 0.4s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .login-box h2 { 
+            margin-bottom: 30px; color: #2c3e50; font-size: 28px; 
+            text-align: center; font-weight: 700;
+        }
+        
+        .login-box input { 
+            padding: 14px 16px; width: 100%; border: 2px solid #e0e0e0; 
+            border-radius: 10px; margin-bottom: 20px; font-size: 15px;
+            transition: all 0.3s; font-family: inherit;
+        }
+        
+        .login-box input:focus { 
+            outline: none; border-color: #667eea; 
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .login-box button { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; padding: 14px; border-radius: 10px; 
+            cursor: pointer; font-weight: 600; font-size: 16px; width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .login-box button:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .login-box button:active { transform: translateY(0); }
+        
+        .erro { 
+            color: #e74c3c; margin-top: 15px; font-size: 14px; 
+            text-align: center; display: none; font-weight: 500;
+        }
+
+        /* DASHBOARD */
+        #dashboard-content { display: none; max-width: 1600px; margin: 0 auto; }
+        
+        .header { 
+            background: white; padding: 25px 30px; border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 15px;
+        }
+        
+        .header h1 { 
+            font-size: 26px; color: #2c3e50; font-weight: 700;
+            display: flex; align-items: center; gap: 10px;
+        }
+        
+        .header-actions {
+            display: flex; gap: 12px; flex-wrap: wrap;
+        }
+        
+        .btn-refresh, .btn-logout { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; padding: 12px 24px; 
+            border-radius: 10px; cursor: pointer; font-weight: 600;
+            display: flex; align-items: center; gap: 8px; font-size: 14px;
+            transition: all 0.3s; border: 2px solid transparent;
+        }
+        
+        .btn-logout {
+            background: white;
+            color: #667eea;
+            border-color: #667eea;
+        }
+        
+        .btn-refresh:hover, .btn-logout:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .container { 
+            display: grid; 
+            grid-template-columns: 420px 1fr; 
+            gap: 25px; 
+        }
+        
+        .card { 
+            background: white; border-radius: 16px; padding: 30px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        
+        .card h2 { 
+            margin: 0 0 25px 0; font-size: 20px; color: #2c3e50; 
+            border-bottom: 3px solid #f0f2f5; padding-bottom: 15px; 
+            font-weight: 700; display: flex; align-items: center; gap: 10px;
+        }
+        
+        /* AVISO DE OCUPAÇÃO */
+        .aviso-ocupacao { 
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-left: 5px solid #27ae60; padding: 18px 20px; 
+            border-radius: 12px; font-size: 15px; 
+            font-weight: 600; display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 2px 10px rgba(39, 174, 96, 0.1);
+        }
+        
+        .aviso-ocupacao.warning { 
+            background: linear-gradient(135deg, #fff3cd 0%, #ffe9a6 100%);
+            border-left-color: #ffc107; color: #856404;
+            box-shadow: 0 2px 10px rgba(255, 193, 7, 0.1);
+        }
+        
+        .aviso-ocupacao.critico { 
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            border-left-color: #e74c3c; color: #721c24;
+            box-shadow: 0 2px 10px rgba(231, 76, 60, 0.1);
+        }
+        
+        .aviso-icon {
+            font-size: 24px;
+        }
+
+        /* Botão Chegou */
+        .btn-chegou {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .btn-chegou:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .acoes-reserva {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        /* FORMULÁRIO MANUAL */
+        .form-manual input, .form-manual select, .form-manual textarea { 
+            width: 100%; padding: 12px 14px; margin-bottom: 14px; 
+            border: 2px solid #e0e0e0; border-radius: 10px; 
+            font-size: 14px; font-family: inherit;
+            transition: all 0.3s;
+        }
+        
+        .form-manual input:focus, .form-manual select:focus, .form-manual textarea:focus {
+            outline: none; 
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-row { display: flex; gap: 12px; }
+        .form-row > * { flex: 1; }
+        .form-row .pax-input { flex: 0.4; }
+        
+        .btn-add { 
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white; border: none; width: 100%; padding: 14px; 
+            border-radius: 10px; cursor: pointer; font-weight: 700; 
+            font-size: 15px; transition: all 0.3s;
+        }
+        
+        .btn-add:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(39, 174, 96, 0.3);
+        }
+        
+        .btn-add:disabled { 
+            background: #95a5a6; 
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* LISTA 15 DIAS */
+        .scroll-resumo { 
+            max-height: 500px; overflow-y: auto; 
+            padding-right: 10px; margin-top: 10px;
+        }
+        
+        .scroll-resumo::-webkit-scrollbar { width: 8px; }
+        .scroll-resumo::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .scroll-resumo::-webkit-scrollbar-thumb { background: #bbb; border-radius: 10px; }
+        .scroll-resumo::-webkit-scrollbar-thumb:hover { background: #999; }
+        
+        .dia-item { 
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 18px; border-radius: 10px; margin-bottom: 10px;
+            transition: all 0.2s; cursor: default;
+        }
+        
+        .dia-item:hover { 
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .status-ok { 
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-left: 5px solid #2ecc71; 
+        }
+        
+        .status-warning { 
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe9a6 100%);
+            border-left: 5px solid #f39c12; 
+        }
+        
+        .status-full { 
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            border-left: 5px solid #e74c3c; 
+        }
+
+        .dia-data { 
+            font-weight: 700; color: #2c3e50; font-size: 14px;
+            display: flex; flex-direction: column; gap: 2px;
+        }
+        
+        .dia-data-principal { font-size: 15px; }
+        .dia-semana { font-size: 12px; color: #666; font-weight: 500; }
+        
+        .pax-badge { 
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white; padding: 6px 14px; border-radius: 20px; 
+            font-weight: 700; font-size: 13px; 
+            box-shadow: 0 2px 8px rgba(44, 62, 80, 0.2);
+        }
+        
+        /* TABELA */
+        .table-container { 
+            overflow-x: auto; 
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        table { width: 100%; border-collapse: collapse; }
+        
+        th { 
+            text-align: left; padding: 16px 14px; 
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 2px solid #dee2e6; font-size: 13px; 
+            font-weight: 700; color: #495057; text-transform: uppercase;
+            letter-spacing: 0.5px; position: sticky; top: 0;
+        }
+        
+        td { 
+            padding: 16px 14px; border-bottom: 1px solid #f0f2f5; 
+            font-size: 14px; 
+        }
+        
+        tr:hover td { background: #f8f9fa; }
+        tr:last-child td { border-bottom: none; }
+        
+        .cliente-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .cliente-nome { font-weight: 600; color: #2c3e50; }
+        .cliente-contato { font-size: 12px; color: #666; }
+        
+        .hora-badge {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 15px;
+        }
+        
+        .obs-text { 
+            font-size: 12px; color: #606770; 
+            font-style: italic; max-width: 200px;
+        }
+        
+        .btn-cancel { 
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white; border: none; padding: 8px 16px; 
+            border-radius: 8px; cursor: pointer; font-size: 12px; 
+            font-weight: 600; transition: all 0.3s;
+        }
+        
+        .btn-cancel:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        /* ESTADOS VAZIOS E LOADING */
+        .loading, .empty-state { 
+            text-align: center; padding: 60px 20px; 
+            color: #95a5a6; font-size: 15px;
+        }
+        
+        .loading::before {
+            content: "⏳";
+            font-size: 40px;
+            display: block;
+            margin-bottom: 15px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .empty-state::before {
+            content: "📭";
+            font-size: 60px;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        /* FILTROS */
+        .filtros {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filtro-btn {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .filtro-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        
+        .filtro-btn.ativo {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1200px) {
+            .container { grid-template-columns: 1fr; }
+        }
+        
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .header { padding: 20px; }
+            .header h1 { font-size: 20px; }
+            .card { padding: 20px; }
+            .btn-refresh, .btn-logout { padding: 10px 16px; font-size: 13px; }
+            th, td { padding: 12px 8px; font-size: 12px; }
+        }
+
+        /* ANIMAÇÕES SUAVES */
+        .fade-in {
+            animation: fadeIn 0.4s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- TELA DE LOGIN -->
+<div id="login-screen">
+    <div class="login-box">
+        <h2>🔒 Acesso Admin</h2>
+        <input 
+            type="password" 
+            id="passInput" 
+            placeholder="Digite a palavra-passe" 
+            autocomplete="current-password"
+        >
+        <button onclick="verificarPass()">Entrar no Dashboard</button>
+        <p class="erro" id="erro">⚠️ Palavra-passe incorreta!</p>
+    </div>
+</div>
+
+<!-- DASHBOARD PRINCIPAL -->
+<div id="dashboard-content">
+    
+    <!-- CABEÇALHO -->
+    <div class="header fade-in">
+        <h1>
+            <span>📊</span>
+            <span>Painel Administrativo Don Tasko</span>
+        </h1>
+        <div class="header-actions">
+            <button class="btn-refresh" onclick="carregarDados()">
+                <span>🔄</span>
+                <span>Atualizar</span>
+            </button>
+            <button class="btn-logout" onclick="logout()">
+                <span>🚪</span>
+                <span>Sair</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        
+        <!-- COLUNA ESQUERDA -->
+        <div>
+            
+            <!-- FORMULÁRIO DE RESERVA MANUAL -->
+            <div class="card fade-in">
+                <h2>
+                    <span>➕</span>
+                    <span>Criar Reserva Manual</span>
+                </h2>
+                <form id="formManual" class="form-manual">
+                    <input 
+                        type="text" 
+                        name="nome" 
+                        placeholder="Nome do Cliente *" 
+                        required
+                        minlength="2"
+                    >
+                    <input 
+                        type="email" 
+                        name="email" 
+                        placeholder="Email *" 
+                        required
+                    >
+                    <input 
+                        type="tel" 
+                        name="telemovel" 
+                        placeholder="Telemóvel *" 
+                        required 
+                        pattern="[0-9]{9,15}"
+                    >
+                    
+                    <div class="form-row">
+                        <input 
+                            type="date" 
+                            name="data" 
+                            id="dataManual" 
+                            required
+                        >
+                        <input 
+                            type="number" 
+                            name="pax" 
+                            value="2" 
+                            min="1" 
+                            max="20" 
+                            required 
+                            class="pax-input" 
+                            title="Número de pessoas"
+                        >
+                    </div>
+                    
+                    <select name="horario" id="horarioManual" required>
+                        <option value="">Selecione o horário *</option>
+                        <option value="12:00">12:00</option>
+                        <option value="12:30">12:30</option>
+                        <option value="13:00">13:00</option>
+                        <option value="13:30">13:30</option>
+                        <option value="19:00">19:00</option>
+                        <option value="19:30">19:30</option>
+                        <option value="20:00">20:00</option>
+                        <option value="20:30">20:30</option>
+                        <option value="21:00">21:00</option>
+                    </select>
+                    
+                    <textarea 
+                        name="obs" 
+                        rows="3" 
+                        placeholder="Notas internas (Mesa, Alergias, Ocasião especial...)"
+                    ></textarea>
+                    
+                    <button type="submit" class="btn-add" id="btnManual">
+                        💾 Gravar Reserva
+                    </button>
+                </form>
+            </div>
+
+            <!-- RESUMO 15 DIAS -->
+            <div class="card fade-in">
+                <h2>
+                    <span>📅</span>
+                    <span>Ocupação (Próximos 15 Dias)</span>
+                </h2>
+                <div id="resumo15" class="scroll-resumo">
+                    <div class="loading">Carregando dados...</div>
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- COLUNA DIREITA - TABELA DE HOJE -->
+        <div class="card fade-in">
+            
+            <!-- AVISO DE OCUPAÇÃO -->
+            <div id="avisoOcupacao"></div>
+            
+            <h2>
+                <span>🍽️</span>
+                <span>Reservas para Hoje</span>
+            </h2>
+            
+            <!-- FILTROS -->
+            <div class="filtros">
+                <button class="filtro-btn ativo" onclick="filtrarTurno('todos')">
+                    Todos
+                </button>
+                <button class="filtro-btn" onclick="filtrarTurno('almoco')">
+                    🌞 Almoço
+                </button>
+                <button class="filtro-btn" onclick="filtrarTurno('jantar')">
+                    🌙 Jantar
+                </button>
+            </div>
+            
+            <div class="table-container">
+                <table id="tabelaHoje">
+                    <thead>
+                        <tr>
+                            <th>Hora</th>
+                            <th>Cliente</th>
+                            <th>Pax</th>
+                            <th>Notas</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="5" class="loading">Carregando reservas...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+        </div>
+        
+    </div>
+</div>
+
+<script>
+    // ========== CONFIGURAÇÕES ==========
+    const CONFIG = {
+        // ⚠️ IMPORTANTE: Substitui pelo teu URL do Google Apps Script
+        URL_SCRIPT: "https://script.google.com/macros/s/AKfycbwzHgqkBG4GLPccDyx27IEreU6sn2BS8bTPgPQCgQU6dMaT_gjNf-MUtV4b8WGWngcP/exec",
+        PASS_CORRETA: "Tasko123",
+        LOTACAO_MAX: 30,
+        DEBUG_MODE: false
+    };
+
+    let reservasHoje = [];
+    let turnoFiltro = 'todos';
+
+    // ========== FUNÇÕES AUXILIARES ==========
+    function debugLog(message, data = null) {
+        if (!CONFIG.DEBUG_MODE) return;
+        const timestamp = new Date().toLocaleTimeString('pt-PT');
+        console.log(`[${timestamp}] ${message}`, data || '');
+    }
+
+    function formatarData(dataISO) {
+        const [ano, mes, dia] = dataISO.split('-');
+        const data = new Date(ano, mes - 1, dia);
+        const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        
+        return {
+            principal: `${dia} ${meses[data.getMonth()]}`,
+            semana: diasSemana[data.getDay()]
+        };
+    }
+
+    function mostrarErro(mensagem) {
+        alert('❌ ' + mensagem);
+        debugLog('ERRO: ' + mensagem);
+    }
+
+    function mostrarSucesso(mensagem) {
+        alert('✅ ' + mensagem);
+        debugLog('SUCESSO: ' + mensagem);
+    }
+
+    // ========== LOGIN ==========
+    function verificarPass() {
+        const senha = document.getElementById('passInput').value;
+        
+        if (senha === CONFIG.PASS_CORRETA) {
+            debugLog('Login bem-sucedido');
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('dashboard-content').style.display = 'block';
+            
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('dataManual').value = hoje;
+            document.getElementById('dataManual').min = hoje;
+            
+            carregarDados();
+            carregarConfigs();
+        } else {
+            debugLog('Tentativa de login falhou');
+            const erroEl = document.getElementById('erro');
+            erroEl.style.display = 'block';
+            
+            document.querySelector('.login-box').style.animation = 'none';
+            setTimeout(() => {
+                document.querySelector('.login-box').style.animation = 'slideIn 0.4s ease';
+            }, 10);
+            
+            setTimeout(() => {
+                erroEl.style.display = 'none';
+            }, 3000);
+        }
+    }
+
+    function logout() {
+        if (confirm('Tem certeza que deseja sair?')) {
+            document.getElementById('dashboard-content').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('passInput').value = '';
+        }
+    }
+
+    document.getElementById('passInput').addEventListener('keypress', (e) => { 
+        if (e.key === 'Enter') verificarPass(); 
+    });
+
+    // ========== CARREGAR CONFIGURAÇÕES ==========
+    async function carregarConfigs() {
+        debugLog('Carregando configurações...');
+        
+        try {
+            const response = await fetch(CONFIG.URL_SCRIPT, { 
+                method: 'POST',
+                body: JSON.stringify({ action: 'getConfigs' })
+            });
+            
+            const configs = await response.json();
+            debugLog('Configs recebidas:', configs);
+            
+            if (configs.LOTACAO_MAXIMA) {
+                CONFIG.LOTACAO_MAX = parseInt(configs.LOTACAO_MAXIMA);
+            }
+        } catch (error) {
+            debugLog('Erro ao carregar configs:', error);
+        }
+    }
+
+    // ========== CARREGAR DADOS (COMPATÍVEL COM AMBOS FORMATOS) ==========
+    async function carregarDados() {
+        debugLog('Iniciando carregamento de dados...');
+        
+        try {
+            const response = await fetch(CONFIG.URL_SCRIPT, { 
+                method: 'POST',
+                body: JSON.stringify({ action: 'getDashboard' })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Erro HTTP: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            debugLog('Dados recebidos:', data);
+            
+            reservasHoje = data.listaHoje || [];
+            
+            // ✨ COMPATIBILIDADE: Detectar formato
+            let resumoAlmoco = {};
+            let resumoJantar = {};
+            
+            if (data.resumoAlmoco && data.resumoJantar) {
+                // Formato NOVO
+                resumoAlmoco = data.resumoAlmoco;
+                resumoJantar = data.resumoJantar;
+                debugLog('Formato NOVO detectado');
+            } else if (data.resumo) {
+                // Formato ANTIGO - Dividir por turnos baseado nas reservas
+                debugLog('Formato ANTIGO detectado, convertendo...');
+                
+                // Processar reservas para separar por turno
+                const hoje = new Date().toISOString().split('T')[0];
+                const reservasAgrupadas = {};
+                
+                reservasHoje.forEach(r => {
+                    const data = hoje; // Assumir que são de hoje
+                    const turno = r.hora < '16:00' ? 'almoco' : 'jantar';
+                    
+                    if (!reservasAgrupadas[data]) {
+                        reservasAgrupadas[data] = { almoco: 0, jantar: 0 };
+                    }
+                    reservasAgrupadas[data][turno] += r.pax;
+                });
+                
+                // Para datas no resumo antigo, dividir meio a meio
+                Object.keys(data.resumo).forEach(dataKey => {
+                    const total = data.resumo[dataKey];
+                    if (!reservasAgrupadas[dataKey]) {
+                        resumoAlmoco[dataKey] = Math.floor(total / 2);
+                        resumoJantar[dataKey] = Math.ceil(total / 2);
+                    }
+                });
+                
+                // Adicionar dados processados das reservas
+                Object.keys(reservasAgrupadas).forEach(dataKey => {
+                    resumoAlmoco[dataKey] = reservasAgrupadas[dataKey].almoco;
+                    resumoJantar[dataKey] = reservasAgrupadas[dataKey].jantar;
+                });
+            }
+            
+            renderizarAvisoOcupacao(resumoAlmoco, resumoJantar);
+            renderizarResumo15Dias(resumoAlmoco, resumoJantar);
+            renderizarTabelaHoje();
+            
+            debugLog('Dados carregados com sucesso!');
+            
+        } catch (error) {
+            debugLog('ERRO ao carregar dados:', error);
+            console.error('Erro detalhado:', error);
+            
+            document.getElementById('avisoOcupacao').innerHTML = `
+                <div class="aviso-ocupacao critico">
+                    <span class="aviso-icon">⚠️</span>
+                    <div>
+                        <strong>Erro ao carregar dados do servidor.</strong><br>
+                        <small>Verifica a conexão ou tenta novamente.</small>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('resumo15').innerHTML = `
+                <div class="empty-state">
+                    Não foi possível carregar os dados.<br>
+                    <button onclick="carregarDados()" class="btn-add" style="margin-top:15px; width:auto; padding:10px 20px;">
+                        Tentar Novamente
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    // ========== RENDERIZAR AVISO DE OCUPAÇÃO ==========
+    function renderizarAvisoOcupacao(resumoAlmoco, resumoJantar) {
+        const hoje = new Date().toISOString().split('T')[0];
+        const almocoHoje = resumoAlmoco[hoje] || 0;
+        const jantarHoje = resumoJantar[hoje] || 0;
+        
+        let avisoHTML = '<div style="display:flex; gap:15px; margin-bottom:20px; flex-wrap:wrap;">';
+        
+        // Almoço
+        const percAlmoco = (almocoHoje / CONFIG.LOTACAO_MAX) * 100;
+        let classeAlmoco = '';
+        let emojiAlmoco = '✅';
+        
+        if (percAlmoco >= 100) {
+            classeAlmoco = 'critico';
+            emojiAlmoco = '🔴';
+        } else if (percAlmoco >= 80) {
+            classeAlmoco = 'critico';
+            emojiAlmoco = '⚠️';
+        } else if (percAlmoco >= 60) {
+            classeAlmoco = 'warning';
+            emojiAlmoco = '⚡';
+        }
+        
+        avisoHTML += `
+            <div class="aviso-ocupacao ${classeAlmoco}" style="flex:1; min-width:280px;">
+                <span class="aviso-icon">${emojiAlmoco}</span>
+                <div>
+                    <strong>🌞 Almoço:</strong> ${almocoHoje} pax • ${CONFIG.LOTACAO_MAX - almocoHoje} vagas
+                </div>
+            </div>
+        `;
+        
+        // Jantar
+        const percJantar = (jantarHoje / CONFIG.LOTACAO_MAX) * 100;
+        let classeJantar = '';
+        let emojiJantar = '✅';
+        
+        if (percJantar >= 100) {
+            classeJantar = 'critico';
+            emojiJantar = '🔴';
+        } else if (percJantar >= 80) {
+            classeJantar = 'critico';
+            emojiJantar = '⚠️';
+        } else if (percJantar >= 60) {
+            classeJantar = 'warning';
+            emojiJantar = '⚡';
+        }
+        
+        avisoHTML += `
+            <div class="aviso-ocupacao ${classeJantar}" style="flex:1; min-width:280px;">
+                <span class="aviso-icon">${emojiJantar}</span>
+                <div>
+                    <strong>🌙 Jantar:</strong> ${jantarHoje} pax • ${CONFIG.LOTACAO_MAX - jantarHoje} vagas
+                </div>
+            </div>
+        `;
+        
+        avisoHTML += '</div>';
+        
+        document.getElementById('avisoOcupacao').innerHTML = avisoHTML;
+    }
+
+    // ========== RENDERIZAR RESUMO 15 DIAS ==========
+    function renderizarResumo15Dias(resumoAlmoco, resumoJantar) {
+        const resumoDiv = document.getElementById('resumo15');
+        
+        const todasDatas = new Set([
+            ...Object.keys(resumoAlmoco),
+            ...Object.keys(resumoJantar)
+        ]);
+        
+        if (todasDatas.size === 0) {
+            resumoDiv.innerHTML = '<div class="empty-state">Nenhuma reserva encontrada.</div>';
+            return;
+        }
+        
+        const hoje = new Date().toISOString().split('T')[0];
+        
+        resumoDiv.innerHTML = Array.from(todasDatas)
+            .sort()
+            .slice(0, 15)
+            .map(dataISO => {
+                const almoco = resumoAlmoco[dataISO] || 0;
+                const jantar = resumoJantar[dataISO] || 0;
+                
+                const isHoje = dataISO === hoje;
+                const dataFormatada = formatarData(dataISO);
+                
+                const percAlmoco = (almoco / CONFIG.LOTACAO_MAX) * 100;
+                const percJantar = (jantar / CONFIG.LOTACAO_MAX) * 100;
+                
+                let classeAlmoco = "status-ok";
+                if (percAlmoco >= 100) classeAlmoco = "status-full";
+                else if (percAlmoco >= 75) classeAlmoco = "status-warning";
+                
+                let classeJantar = "status-ok";
+                if (percJantar >= 100) classeJantar = "status-full";
+                else if (percJantar >= 75) classeJantar = "status-warning";
+                
+                return `
+                    <div style="margin-bottom: 15px;">
+                        <div style="font-weight: 700; margin-bottom: 8px; color: #2c3e50; font-size: 14px;">
+                            <span class="dia-data-principal">${dataFormatada.principal}</span>
+                            ${isHoje ? ' <strong style="color:#667eea;">(HOJE)</strong>' : ''}
+                            <span class="dia-semana"> - ${dataFormatada.semana}</span>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <div class="dia-item ${classeAlmoco}" style="flex: 1; padding: 10px 12px;">
+                                <span style="font-size: 11px; color: #666;">🌞 Almoço</span>
+                                <span class="pax-badge" style="font-size: 12px;">${almoco}</span>
+                            </div>
+                            <div class="dia-item ${classeJantar}" style="flex: 1; padding: 10px 12px;">
+                                <span style="font-size: 11px; color: #666;">🌙 Jantar</span>
+                                <span class="pax-badge" style="font-size: 12px;">${jantar}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+    }
+
+    // ========== RENDERIZAR TABELA DE HOJE ==========
+    function renderizarTabelaHoje() {
+        const tbody = document.querySelector('#tabelaHoje tbody');
+        
+        let listaFiltrada = reservasHoje;
+        if (turnoFiltro === 'almoco') {
+            listaFiltrada = reservasHoje.filter(r => r.turno === 'Almoço' || r.hora < '16:00');
+        } else if (turnoFiltro === 'jantar') {
+            listaFiltrada = reservasHoje.filter(r => r.turno === 'Jantar' || r.hora >= '16:00');
+        }
+        
+        if (listaFiltrada.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="empty-state">
+                        ${turnoFiltro === 'todos' ? '📭 Sem reservas para hoje' : 'Sem reservas neste turno'}
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = listaFiltrada
+            .sort((a, b) => a.hora.localeCompare(b.hora))
+            .map(reserva => `
+                <tr>
+                    <td><span class="hora-badge">${reserva.hora}</span></td>
+                    <td>
+                        <div class="cliente-info">
+                            <span class="cliente-nome">${reserva.nome}</span>
+                            ${reserva.tel ? `<span class="cliente-contato">📞 ${reserva.tel}</span>` : ''}
+                        </div>
+                    </td>
+                    <td><span class="pax-badge">${reserva.pax}</span></td>
+                    <td class="obs-text">${reserva.obs || '—'}</td>
+                    <td>
+                        <div class="acoes-reserva">
+                            ${reserva.status === 'Confirmada' ? `
+                                <button class="btn-chegou" onclick="marcarChegada('${reserva.id}')" title="Marcar como chegou">
+                                    ✅
+                                </button>
+                            ` : reserva.status === 'Chegou' ? `
+                                <span style="color:#27ae60; font-weight:700; font-size:11px; padding:6px;">✓ Chegou</span>
+                            ` : ''}
+                            <button class="btn-cancel" onclick="cancelarReserva('${escaparTexto(reserva.nome)}', '${reserva.hora}')">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+    }
+
+    function escaparTexto(texto) {
+        return texto.replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+
+    // ========== FILTRAR POR TURNO ==========
+    function filtrarTurno(turno) {
+        turnoFiltro = turno;
+        
+        document.querySelectorAll('.filtro-btn').forEach(btn => {
+            btn.classList.remove('ativo');
+        });
+        event.target.classList.add('ativo');
+        
+        renderizarTabelaHoje();
+    }
+
+    // ========== MARCAR CHEGADA ==========
+    async function marcarChegada(id) {
+        if (!confirm('Confirma que o cliente chegou ao restaurante?')) {
+            return;
+        }
+        
+        debugLog(`Marcando chegada: ${id}`);
+        
+        try {
+            const response = await fetch(CONFIG.URL_SCRIPT, { 
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'marcarChegada',
+                    id: id
+                })
+            });
+            
+            const resultado = await response.json();
+            debugLog('Resposta da chegada:', resultado);
+            
+            if (resultado.status === 'success') {
+                mostrarSucesso(resultado.message);
+                carregarDados();
+            } else {
+                mostrarErro(resultado.message || 'Erro ao marcar chegada');
+            }
+        } catch (error) {
+            debugLog('Erro ao marcar chegada:', error);
+            mostrarErro('Não foi possível marcar a chegada. Tenta novamente.');
+        }
+    }
+
+    // ========== CANCELAR RESERVA ==========
+    async function cancelarReserva(nome, hora) {
+        if (!confirm(`Confirma o cancelamento da reserva?\n\n👤 Cliente: ${nome}\n🕐 Horário: ${hora}`)) {
+            return;
+        }
+        
+        debugLog(`Cancelando reserva: ${nome} às ${hora}`);
+        
+        try {
+            const response = await fetch(CONFIG.URL_SCRIPT, { 
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'cancelarAdmin',
+                    nome: nome,
+                    hora: hora
+                })
+            });
+            
+            const resultado = await response.json();
+            debugLog('Resposta do cancelamento:', resultado);
+            
+            if (resultado.status === 'success') {
+                mostrarSucesso(resultado.message);
+                carregarDados();
+            } else {
+                mostrarErro(resultado.message || 'Erro desconhecido ao cancelar');
+            }
+        } catch (error) {
+            debugLog('Erro ao cancelar:', error);
+            mostrarErro('Não foi possível processar o cancelamento. Tenta novamente.');
+        }
+    }
+
+    // ========== SUBMETER RESERVA MANUAL ==========
+    document.getElementById('formManual').onsubmit = async function(e) {
+        e.preventDefault();
+        
+        const btn = document.getElementById('btnManual');
+        const textoOriginal = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = "⏳ Gravando...";
+        
+        debugLog('Submetendo reserva manual...');
+
+        try {
+            const formData = new FormData(this);
+            const dados = Object.fromEntries(formData.entries());
+            dados.action = "reservaManual";
+            
+            debugLog('Dados do formulário:', dados);
+
+            const response = await fetch(CONFIG.URL_SCRIPT, { 
+                method: 'POST',
+                body: JSON.stringify(dados)
+            });
+            
+            const resultado = await response.json();
+            debugLog('Resposta da reserva:', resultado);
+            
+            if (resultado.status === 'success') {
+                mostrarSucesso('Reserva criada com sucesso! ID: ' + resultado.id);
+                this.reset();
+                
+                const hoje = new Date().toISOString().split('T')[0];
+                document.getElementById('dataManual').value = hoje;
+                
+                await carregarDados();
+            } else {
+                mostrarErro(resultado.message || 'Erro ao criar reserva');
+            }
+        } catch (error) {
+            debugLog('Erro ao gravar reserva:', error);
+            mostrarErro('Não foi possível gravar a reserva. Verifica os dados e tenta novamente.');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = textoOriginal;
+        }
+    };
+
+    debugLog('Dashboard admin carregado e pronto');
+</script>
+
+</body>
+</html>
